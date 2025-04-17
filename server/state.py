@@ -1,5 +1,5 @@
-watched_folders = set()
-
+watched_folders: list[str] = []
+current_image_dir: str = ""
 
 def get_watched_folders():
     return list(watched_folders)

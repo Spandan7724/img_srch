@@ -52,7 +52,7 @@ async def set_folders(request: Request, body: FoldersRequest):
 
             if full_path not in watched_folders:
                 add_watcher(full_path, embeddings_db)
-                watched_folders.add(full_path)
+                watched_folders.append(full_path)
                 print(f"Watcher started on: {full_path}")
 
             added_folders.append(full_path)

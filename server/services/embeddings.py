@@ -5,6 +5,8 @@ import torch
 import clip
 from PIL import Image
 from fastapi import Request
+import server.state as state
+from urllib.parse import quote
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 model, preprocess = clip.load("ViT-B/32", device=device)
@@ -94,9 +96,13 @@ def search_images(query_text: str, request: Request):
                             key=lambda x: x[1], reverse=True)[:5]
 
     # Format results
+
     results = []
     for path, score in sorted_results:
-        full_url = str(request.base_url) + f"images/{os.path.basename(path)}"
+        relative_path = os.path.relpath(path, state.current_image_dir)
+        unix_path = relative_path.replace(os.sep, "/")
+        safe_path = quote(unix_path)
+        full_url = f"{request.base_url}images/{safe_path}"
         results.append({
             "path": path,
             "score": float(score),

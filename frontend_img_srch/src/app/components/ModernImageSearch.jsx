@@ -1,3 +1,7 @@
+// src/app/components/ModernImageSearch.jsx
+// This component is a modern image search interface that allows users to search for images
+
+
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -248,7 +252,7 @@ const handleFolderChange = async (e) => {
             onClick={(e) => e.stopPropagation()}
           >
             <img
-              src={getImageUrl(selectedImage.path)}
+              src={selectedImage.full_url}
               alt="Selected result"
               className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl"
               onDoubleClick={(e) => {
@@ -385,7 +389,7 @@ const handleFolderChange = async (e) => {
               <CardContent className="p-4">
                 <div className="relative">
                   <img
-                    src={getImageUrl(result.path)}
+                    src={result.full_url}
                     alt={`Search result ${index + 1}`}
                     className="w-full h-48 object-cover rounded-lg mb-3"
                   />

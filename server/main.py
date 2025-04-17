@@ -1,4 +1,5 @@
 # server/main.py
+import server.state as state
 import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,7 +8,7 @@ from server.routes import folders, search, open_file
 from server.services.embeddings import extract_and_store_embeddings, embeddings_db
 from server.services.watcher import start_watcher
 from server.state import watched_folders
-
+from server.state import current_image_dir
 app = FastAPI()
 
 # Ensure a base directory exists
@@ -27,15 +28,18 @@ def get_image_directory():
 
 
 def remount_static_files():
-    global app
+    # 1) remove any existing "/images" mount
+    app.router.routes = [
+        r for r in app.router.routes
+        if not (hasattr(r, "path") and r.path.startswith("/images"))
+    ]
+    # 2) pick the new folder
     image_dir = get_image_directory()
-
-    if "images" in app.routes:
-        # Remove existing mount
-        app.routes = [route for route in app.routes if route.path != "/images"]
-    app.mount("/images", StaticFiles(directory=image_dir),
-              name="images")  # Mount new directory
+    state.current_image_dir = image_dir
+    # 3) re‑mount
+    app.mount("/images", StaticFiles(directory=image_dir), name="images")
     print(f"Serving images from: {image_dir}")
+
 
 
 # CORS Configuration
@@ -61,7 +65,7 @@ async def startup_event():
     print("Extracting embeddings for existing images in default folder...")
 
     extract_and_store_embeddings()
-    watched_folders.add(BASE_IMAGE_DIR)  # Start with base directory
+    watched_folders.append(BASE_IMAGE_DIR)
 
     print("Starting filesystem watcher for default folder...")
     global observer
