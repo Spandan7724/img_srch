@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Image Search Launcher</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div id="drag-container">
+        <div id="header">
+            <input type="text" id="search" placeholder="Type to search images..." autofocus />
+            <button id="select-folder" title="Select Folder">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                    <path
+                        d="M10 4H2C0.9 4 0 4.9 0 6v12c0 1.1 0.9 2 2 2h20c1.1 0 2-0.9 2-2V8c0-1.1-0.9-2-2-2H12l-2-2z" />
+                </svg>
+            </button>
+        </div>
+        <div id="results"></div>
+    </div>
+    <script src="index.js"></script>
+</body>
+
+</html>

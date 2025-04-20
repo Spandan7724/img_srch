@@ -1,3 +1,11 @@
+# Copyright (c) 2025 Spandan Chavan
+# All rights reserved.
+# Unauthorized copying of this file, via any medium, is strictly prohibited.
+# Proprietary and confidential.
+
+
+
+
 # server/main.py
 import server.state as state
 import os

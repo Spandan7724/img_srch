@@ -1,0 +1,17 @@
+{
+  "name": "img_launcher",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "electron": "^35.2.0",
+    "fuse.js": "^7.1.0"
+  }
+}
