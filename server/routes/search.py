@@ -2,8 +2,8 @@
 from fastapi import APIRouter, HTTPException, Request
 from typing import List
 
-from server.models.schemas import Query, SearchResult
-from server.services.embeddings import search_images
+from models.schemas import Query, SearchResult
+from services.embeddings import search_images
 
 router = APIRouter()
 

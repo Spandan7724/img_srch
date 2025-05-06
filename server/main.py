@@ -3,54 +3,54 @@
 # Unauthorized copying of this file, via any medium, is strictly prohibited.
 # Proprietary and confidential.
 
-
-
-
 # server/main.py
-import server.state as state
+
 import os
+import state as state
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from server.routes import folders, search, open_file
-from server.services.embeddings import extract_and_store_embeddings, embeddings_db
-from server.services.watcher import start_watcher
-from server.state import watched_folders
-from server.state import current_image_dir
+from fastapi.routing import Mount
+
+from routes import folders, search, open_file
+from services.embeddings import extract_and_store_embeddings, embeddings_db
+from services.watcher import start_watcher
+from state import watched_folders, current_image_dir
+
 app = FastAPI()
 
-# Ensure a base directory exists
-# Default to the user's home directory
-BASE_IMAGE_DIR = os.path.expanduser("~")
+# ─── Helpers ──────────────────────────────────────────────────────────────
 
-# Function to dynamically determine the image serving directory
+BASE_IMAGE_DIR = os.path.expanduser("~")          # user’s home dir fallback
 
 
-def get_image_directory():
-    if watched_folders:
-        # Serve the most recently selected folder
-        return list(watched_folders)[-1]
-    return BASE_IMAGE_DIR  # Fallback to the home directory
-
-# Dynamically mount the latest image directory
+def get_image_directory() -> str:
+    """Return the most-recently watched folder, or the home directory."""
+    return list(watched_folders)[-1] if watched_folders else BASE_IMAGE_DIR
 
 
-def remount_static_files():
-    # 1) remove any existing "/images" mount
+def remount_static_files() -> None:
+    """
+    Unmount any existing StaticFiles routes and re-mount the latest folder
+    at /images so URLs like /images/foo.jpg work consistently.
+    """
+    # 1) Remove old StaticFiles mounts
     app.router.routes = [
         r for r in app.router.routes
-        if not (hasattr(r, "path") and r.path.startswith("/images"))
+        if not (isinstance(r, Mount) and isinstance(r.app, StaticFiles))
     ]
-    # 2) pick the new folder
+
+    # 2) Pick the new folder
     image_dir = get_image_directory()
     state.current_image_dir = image_dir
-    # 3) re‑mount
+
+    # 3) Mount at fixed prefix /images
     app.mount("/images", StaticFiles(directory=image_dir), name="images")
-    print(f"Serving images from: {image_dir}")
+    print(f"Serving images from: {image_dir}   (mounted at /images)")
 
 
+# ─── CORS ─────────────────────────────────────────────────────────────────
 
-# CORS Configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -59,42 +59,40 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include API Routes
-app.include_router(search.router, tags=["Search"])
-app.include_router(open_file.router, tags=["File Operations"])
-app.include_router(folders.router, tags=["Folder Management"])
+# ─── Routes ───────────────────────────────────────────────────────────────
 
-observer = None  # Store the file system watcher for default folder
+app.include_router(search.router,   tags=["Search"])
+app.include_router(open_file.router, tags=["File Operations"])
+app.include_router(folders.router,  tags=["Folder Management"])
+
+# ─── Startup / Shutdown ──────────────────────────────────────────────────
+observer = None  # file-system watcher handle
 
 
 @app.on_event("startup")
 async def startup_event():
-    global watched_folders
-    print("Extracting embeddings for existing images in default folder...")
-
+    global observer
+    print("Extracting embeddings for default folder...")
     extract_and_store_embeddings()
+
     watched_folders.append(BASE_IMAGE_DIR)
 
-    print("Starting filesystem watcher for default folder...")
-    global observer
-    # Watch base directory
+    print("Starting watcher for default folder...")
     observer = start_watcher(BASE_IMAGE_DIR, embeddings_db)
 
-    remount_static_files()  # Ensure correct folder is mounted
-    print("Embeddings and default watcher are ready.")
+    remount_static_files()
+    print("Startup complete.")
 
 
 @app.on_event("shutdown")
 def shutdown_event():
-    global observer
     if observer:
         observer.stop()
         observer.join()
-        print("File system watcher stopped.")
-
-# Endpoint to update image directory dynamically
+        print("Watcher stopped.")
 
 
+# ─── Manual re-mount endpoint ────────────────────────────────────────────
 @app.post("/update-images/")
 async def update_images():
     remount_static_files()

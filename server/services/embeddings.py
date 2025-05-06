@@ -5,7 +5,7 @@ import torch
 import clip
 from PIL import Image
 from fastapi import Request
-import server.state as state
+import state as state
 from urllib.parse import quote
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -99,13 +99,15 @@ def search_images(query_text: str, request: Request):
 
     results = []
     for path, score in sorted_results:
+        # Convert cosine (−1…+1) → percentile (0…1)
+        percentile = (score + 1.0) / 2.0
         relative_path = os.path.relpath(path, state.current_image_dir)
         unix_path = relative_path.replace(os.sep, "/")
         safe_path = quote(unix_path)
         full_url = f"{request.base_url}images/{safe_path}"
         results.append({
             "path": path,
-            "score": float(score),
+            "score": float(percentile),
             "full_url": full_url
         })
     return results

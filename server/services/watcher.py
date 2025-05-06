@@ -4,7 +4,7 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import torch
 from PIL import Image
-from server.services.embeddings import model, preprocess, embeddings_db, device
+from services.embeddings import model, preprocess, embeddings_db, device
 
 observers = []  # We'll store references to all observers here
 

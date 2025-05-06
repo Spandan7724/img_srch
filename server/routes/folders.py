@@ -4,10 +4,10 @@ from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 from typing import List
 
-from server.services.embeddings import index_folder
-from server.services.watcher import add_watcher
-from server.state import watched_folders
-from server.services.embeddings import embeddings_db
+from services.embeddings import index_folder
+from services.watcher import add_watcher
+from state import watched_folders
+from services.embeddings import embeddings_db
 
 # Dynamically determine the base directory
 BASE_DIRECTORIES = [

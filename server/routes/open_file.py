@@ -4,7 +4,7 @@ import platform
 import subprocess
 from fastapi import APIRouter, HTTPException
 
-from server.models.schemas import FilePathRequest
+from models.schemas import FilePathRequest
 
 router = APIRouter()
 
