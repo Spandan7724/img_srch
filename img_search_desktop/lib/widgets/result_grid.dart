@@ -38,9 +38,12 @@ class ResultGrid extends StatelessWidget {
         final it = items[i];
         return GestureDetector(
           onTap: () => Api.openImage(it.path),
-          child: Container(
+          child: Column(
             children: [
-
+              Expanded(child: Image.network(it.fullUrl, fit: BoxFit.cover)),
+              Text(
+                "${(it.score * 100).toStringAsFixed(1)}%",
+                style: const TextStyle(color: Colors.white70, fontSize: 12),
               ),
             ],
           ),

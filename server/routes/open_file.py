@@ -55,11 +55,6 @@ async def open_file(request: FilePathRequest):
 
 @router.post("/open-image/")
 async def open_image(request: FilePathRequest):
-    import os
-    import platform
-    import subprocess
-    from fastapi import HTTPException
-
     path = request.path
     absolute_path = os.path.abspath(path)
     print(f"[DEBUG] Attempting to open: {absolute_path}")
