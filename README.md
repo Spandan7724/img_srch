@@ -96,6 +96,20 @@ alt+s
 to start/close it 
 
 
+# Screenshots & Demo Videos
+
+
+## Webapp
+
+![Webapp](data/Screenshot%202025-05-18%20200835.png)
+
+
+## Flutter Desktop app
+
+![Flutter Desktop app](data/Recording%202025-05-18%20200635.gif)
+
+
+
 ## How It Works
 
 - User selects a folder (via web or desktop).
