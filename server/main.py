@@ -6,6 +6,7 @@
 # server/main.py
 
 import os
+import asyncio
 import state as state
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,7 +14,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.routing import Mount
 
 from routes import folders, search, open_file, websocket
-from services.embeddings import extract_and_store_embeddings, embeddings_db
+from services.embeddings import extract_and_store_embeddings, embeddings_db, index_folder_async
 from services.watcher import start_watcher
 from state import watched_folders, current_image_dir
 
@@ -96,6 +97,17 @@ def shutdown_event():
 # ─── Manual re-mount endpoint ────────────────────────────────────────────
 @app.post("/update-images/")
 async def update_images():
+    """
+    Remount static files and trigger async indexing of the current folder.
+    This will send real-time progress updates via WebSocket.
+    """
     remount_static_files()
-    return {"status": "success", "image_directory": get_image_directory()}
+    
+    # Get the current folder to index
+    current_folder = get_image_directory()
+    
+    # Start async indexing in background (don't await to return immediately)
+    asyncio.create_task(index_folder_async(current_folder))
+    
+    return {"status": "success", "image_directory": current_folder, "indexing": "started"}
 
