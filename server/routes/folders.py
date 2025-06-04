@@ -1,12 +1,13 @@
 # server/routes/folders.py
 import os
-from fastapi import APIRouter, HTTPException, Request
+import asyncio
+from fastapi import APIRouter, HTTPException, Request, BackgroundTasks
 from pydantic import BaseModel
 from typing import List
 
-from services.embeddings import index_folder
+from services.embeddings import index_folder_async
 from services.watcher import add_watcher
-from state import watched_folders
+from state import watched_folders, get_indexing_status
 from services.embeddings import embeddings_db
 
 # Dynamically determine the base directory
@@ -24,8 +25,17 @@ router = APIRouter()
 
 
 @router.post("/folders", tags=["Folder Management"], summary="Add folders to index and watch")
-async def set_folders(request: Request, body: FoldersRequest):
+async def set_folders(request: Request, body: FoldersRequest, background_tasks: BackgroundTasks):
     global watched_folders
+    
+    # Check if already indexing
+    status = get_indexing_status()
+    if status["is_indexing"]:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Already indexing folder: {status['current_folder']}. Please wait for completion."
+        )
+    
     added_folders = []
 
     for folder in body.folders:
@@ -45,8 +55,10 @@ async def set_folders(request: Request, body: FoldersRequest):
             )
 
         try:
-            print(f"Indexing folder: {full_path}")
-            index_folder(full_path)
+            print(f"Starting indexing for folder: {full_path}")
+            
+            # Start async indexing in background
+            background_tasks.add_task(index_folder_async, full_path)
 
             if full_path not in watched_folders:
                 add_watcher(full_path, embeddings_db)
@@ -65,21 +77,32 @@ async def set_folders(request: Request, body: FoldersRequest):
         "status": "success",
         "added_folders": added_folders,
         "watched_folders": list(watched_folders),
-        "message": (
-            f"Indexing complete for {len(added_folders)} folder(s): "
-            f"{', '.join(os.path.basename(f) for f in added_folders)}. "
-            "You can now search."
-        )
+        "message": f"Indexing started for {len(added_folders)} folder(s). Check status or connect to WebSocket for progress updates."
     }
 
 
+@router.get("/indexing-status", tags=["Folder Management"], summary="Get current indexing status")
+async def get_indexing_status_endpoint():
+    """Get the current indexing status including progress information."""
+    return get_indexing_status()
+
+
 @router.post("/reindex/", tags=["Folder Management"], summary="Reindex all watched folders")
-async def reindex_all_folders(request: Request):
+async def reindex_all_folders(request: Request, background_tasks: BackgroundTasks):
     global watched_folders, embeddings_db
+    
+    # Check if already indexing
+    status = get_indexing_status()
+    if status["is_indexing"]:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Already indexing folder: {status['current_folder']}. Please wait for completion."
+        )
+    
     embeddings_db.clear()
 
     # Re-index all watched folders (recursive)
     for folder in watched_folders:
-        index_folder(folder)
+        background_tasks.add_task(index_folder_async, folder)
 
-    return {"status": "success", "message": "Re-indexing complete."}
+    return {"status": "success", "message": "Re-indexing started for all watched folders. Check status for progress."}
