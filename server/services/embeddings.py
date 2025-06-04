@@ -2,14 +2,16 @@
 import os
 import numpy as np
 import torch
-import clip
+import open_clip
 from PIL import Image
 from fastapi import Request
 import state as state
 from urllib.parse import quote
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
-model, preprocess = clip.load("ViT-B/32", device=device)
+model, _, preprocess = open_clip.create_model_and_transforms('ViT-B-32', pretrained='laion2b_s34b_b79k')
+model = model.to(device)
+tokenizer = open_clip.get_tokenizer('ViT-B-32')
 
 IMAGE_DIR = "data/"
 embeddings_db = {}
@@ -78,9 +80,8 @@ def search_images(query_text: str, request: Request):
 
     # Encode the query text
     with torch.no_grad():
-        text_features = model.encode_text(
-            clip.tokenize([query_text]).to(device)
-        ).cpu().numpy()
+        text_tokens = tokenizer([query_text]).to(device)
+        text_features = model.encode_text(text_tokens).cpu().numpy()
 
     # Calculate cosine similarity
     similarities = {}

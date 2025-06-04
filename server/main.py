@@ -97,3 +97,4 @@ def shutdown_event():
 async def update_images():
     remount_static_files()
     return {"status": "success", "image_directory": get_image_directory()}
+
