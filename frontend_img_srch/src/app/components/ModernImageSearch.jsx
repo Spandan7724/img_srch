@@ -1,14 +1,16 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Search, Loader2, FolderOpen, Copy, X, Maximize2, ChevronRight } from 'lucide-react';
+import { FolderOpen, Copy, ChevronRight, Loader2, Search } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from "@/hooks/use-toast";
 import { useWebSocket } from "@/hooks/use-websocket";
-import IndexingStatusBanner from "@/components/IndexingStatusBanner";
+import SearchControls from './imageSearch/SearchControls';
+import FolderBadges from './imageSearch/FolderBadges';
+import ImageModal from './imageSearch/ImageModal';
+import IndexingStatusBanner from './imageSearch/IndexingStatusBanner';
 
 const getImageUrl = (path) => {
   if (!path) return ''; // Handle cases where path is undefined
@@ -179,7 +181,7 @@ const ImageSearch = () => {
   // -------------------------------
   //  Searching logic
   // -------------------------------
-  const handleSearch = async () => {
+  const handleSearch = useCallback(async () => {
     if (!query.trim()) return;
     setIsLoading(true);
     setError(null);
@@ -205,7 +207,7 @@ const ImageSearch = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [query]);
 
   const handleImageLoad = (resultId) => {
     setLoadedImages(prev => ({
@@ -300,7 +302,7 @@ const ImageSearch = () => {
     };
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [selectedImage]);
+  }, [selectedImage, handleSearch]);
 
   // Calculate dynamic score color based on the match percentage
   const getScoreColor = (score) => {
@@ -330,94 +332,14 @@ const ImageSearch = () => {
         }}
       />
 
-      {/* Modal for enlarged image view */}
-      {selectedImage && (
-        <div
-          className="fixed inset-0 bg-black/95 backdrop-blur-sm z-50 flex items-center justify-center"
-          onClick={() => setSelectedImage(null)}
-        >
-          <div
-            className="max-w-5xl w-full max-h-[90vh] p-4 relative"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Close button */}
-            <button 
-              className="absolute top-0 right-0 -mt-10 -mr-10 bg-white/10 backdrop-blur-sm p-2 rounded-full hover:bg-white/20 transition-all"
-              onClick={() => setSelectedImage(null)}
-            >
-              <X className="h-5 w-5" />
-            </button>
-            
-            {/* Image container with animation */}
-            <div className="relative rounded-lg overflow-hidden shadow-2xl ring-1 ring-white/10 animate-fadeIn">
-              <img
-                src={selectedImage.full_url}
-                alt="Selected result"
-                className="max-w-full max-h-[75vh] object-contain rounded-lg w-full"
-                onDoubleClick={(e) => {
-                  e.stopPropagation();
-                  openInViewer(selectedImage.path);
-                }}
-              />
-              
-              {/* Image overlay with controls */}
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4">
-                <div className="flex items-center justify-between">
-                  <p className="text-xl font-semibold">
-                    Similarity Score: 
-                    <span className={`ml-2 ${getScoreColor(selectedImage.score)}`}>
-                      {(selectedImage.score * 100).toFixed(2)}%
-                    </span>
-                  </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="bg-white/10 border-white/20 hover:bg-white/20"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openInViewer(selectedImage.path);
-                    }}
-                  >
-                    <Maximize2 className="h-4 w-4 mr-2" />
-                    Open in Viewer
-                  </Button>
-                </div>
-                
-                <div className="flex items-center gap-2 bg-black/50 backdrop-blur-sm rounded-lg p-3 mt-3">
-                  <p className="text-gray-300 text-sm font-mono">{selectedImage.path}</p>
-                  <div className="flex gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 w-7 p-0 rounded-full text-gray-400 hover:text-white hover:bg-white/10"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleCopyPath(selectedImage.path);
-                      }}
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 w-7 p-0 rounded-full text-gray-400 hover:text-white hover:bg-white/10"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openInExplorer(selectedImage.path);
-                      }}
-                    >
-                      <FolderOpen className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-                <p className="text-sm text-gray-400 mt-2 text-center italic">
-                  Double-click image to open in default viewer
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <ImageModal
+        image={selectedImage}
+        onClose={() => setSelectedImage(null)}
+        onCopy={handleCopyPath}
+        onOpenExplorer={openInExplorer}
+        onOpenViewer={openInViewer}
+        getScoreColor={getScoreColor}
+      />
 
       <div className={`max-w-6xl mx-auto px-6 py-12 relative z-10 ${indexingStatus.visible ? 'pt-20' : ''}`}>
         <div className="mb-12 mt-8">
@@ -437,72 +359,18 @@ const ImageSearch = () => {
             </div>
           )}
 
-          {/* Hidden input for folder selection */}
-          <input
-            type="file"
-            ref={folderInputRef}
-            className="hidden"
-            webkitdirectory="true"
-            multiple
-            onChange={handleFolderChange}
+          <SearchControls
+            query={query}
+            setQuery={setQuery}
+            onSearch={handleSearch}
+            isLoading={isLoading}
+            folderInputRef={folderInputRef}
+            onFolderChange={handleFolderChange}
+            onSelectFolders={handleSelectFolders}
+            isSearchFocused={isSearchFocused}
+            setIsSearchFocused={setIsSearchFocused}
+            folders={folders}
           />
-
-          {/* Search interface */}
-          <div className="flex justify-center items-center max-w-3xl mx-auto gap-4 relative">
-            {/* "Select Folders" button */}
-            <Button
-              variant="outline"
-              className={`flex items-center gap-2 transition-all duration-300 border-gray-700
-                ${folders.length > 0 ? 'bg-blue-900/20 border-blue-700/30 text-blue-200' : 'bg-transparent text-white hover:bg-white'}`}
-              onClick={handleSelectFolders}
-            >
-              <FolderOpen className="h-4 w-4" />
-              {folders.length > 0 ? 'Change Folders' : 'Select Folders'}
-            </Button>
-
-            {/* Search bar */}
-            <div className="relative flex-1">
-              <div className={`absolute inset-0 rounded-lg ${isSearchFocused ? 'ring-2 ring-blue-500/50' : ''} transition-all duration-300`}></div>
-              <Input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Describe what you're looking for..."
-                className="bg-gray-900/80 border-gray-700 text-white placeholder-gray-400 
-                          focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                          h-12 text-lg rounded-lg pl-4 pr-12 transition-all duration-200 backdrop-blur-sm"
-                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                onFocus={() => setIsSearchFocused(true)}
-                onBlur={() => setIsSearchFocused(false)}
-              />
-              {query && (
-                <button
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200 transition-colors"
-                  onClick={() => setQuery('')}
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-
-            {/* "Search" button */}
-            <Button
-              onClick={handleSearch}
-              disabled={isLoading || !query.trim()}
-              className={`bg-gradient-to-b from-black to-gray-900 text-white 
-                        border border-gray-800 rounded-lg h-12 flex items-center gap-2 px-5 
-                        transition-all duration-200
-                        hover:text-cyan-300 hover:shadow-[0_0_10px_rgba(34,211,238,0.4)] 
-                        ${!query.trim() ? 'opacity-70' : ''}`}
-            >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Search className="h-4 w-4" />
-              )}
-              {isLoading ? 'Searching...' : 'Search'}
-            </Button>
-          </div>
         </div>
 
         {/* If there is an error */}
@@ -512,30 +380,11 @@ const ImageSearch = () => {
           </Alert>
         )}
 
-        {/* Display selected folders */}
-        {folders.length > 0 && showFolderBadges && (
-          <div className="max-w-3xl mx-auto mb-8 bg-gray-900/40 backdrop-blur-sm p-4 rounded-lg border border-gray-800">
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="text-md font-medium text-white">Selected Folders:</h2>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-xs text-gray-400 hover:text-white"
-                onClick={() => setShowFolderBadges(false)}
-              >
-                Hide
-              </Button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {folders.map((folder, index) => (
-                <div key={index} className="flex items-center bg-blue-900/20 text-blue-200 text-sm px-2 py-1 rounded border border-blue-700/20">
-                  <FolderOpen className="h-3 w-3 text-blue-400 mr-1" />
-                  <span>{folder}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        <FolderBadges
+          folders={folders}
+          show={showFolderBadges}
+          onHide={() => setShowFolderBadges(false)}
+        />
 
         {/* Results grid */}
         <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 ${results.length > 0 ? 'mb-10' : ''}`}>
