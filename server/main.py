@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.routing import Mount
 
-from routes import folders, search, open_file
+from routes import folders, search, open_file, websocket
 from services.embeddings import extract_and_store_embeddings, embeddings_db
 from services.watcher import start_watcher
 from state import watched_folders, current_image_dir
@@ -21,7 +21,7 @@ app = FastAPI()
 
 # ─── Helpers ──────────────────────────────────────────────────────────────
 
-BASE_IMAGE_DIR = os.path.expanduser("~")          # user’s home dir fallback
+BASE_IMAGE_DIR = os.path.expanduser("~")          # user's home dir fallback
 
 
 def get_image_directory() -> str:
@@ -64,6 +64,7 @@ app.add_middleware(
 app.include_router(search.router,   tags=["Search"])
 app.include_router(open_file.router, tags=["File Operations"])
 app.include_router(folders.router,  tags=["Folder Management"])
+app.include_router(websocket.router, tags=["WebSocket"])
 
 # ─── Startup / Shutdown ──────────────────────────────────────────────────
 observer = None  # file-system watcher handle

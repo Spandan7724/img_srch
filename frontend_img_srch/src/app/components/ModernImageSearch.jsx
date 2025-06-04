@@ -1,12 +1,14 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, Loader2, FolderOpen, Copy, X, Maximize2, ChevronRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from "@/hooks/use-toast";
+import { useWebSocket } from "@/hooks/use-websocket";
+import IndexingStatusBanner from "@/components/IndexingStatusBanner";
 
 const getImageUrl = (path) => {
   if (!path) return ''; // Handle cases where path is undefined
@@ -32,7 +34,60 @@ const ImageSearch = () => {
   const [folders, setFolders] = useState([]);
   const [showFolderBadges, setShowFolderBadges] = useState(true);
 
+  // Indexing status state
+  const [indexingStatus, setIndexingStatus] = useState({
+    visible: false,
+    type: null,
+    folder: null,
+    current_file: null,
+    processed: 0,
+    total: 0,
+    percentage: 0,
+    total_indexed: 0,
+    message: null,
+    error: null,
+    timestamp: null
+  });
+
   const { toast } = useToast();
+
+  // WebSocket message handler
+  const handleWebSocketMessage = useCallback((data) => {
+    console.log('WebSocket message received:', data);
+    
+    setIndexingStatus(prev => ({
+      ...prev,
+      visible: true,
+      type: data.type,
+      folder: data.folder || prev.folder,
+      current_file: data.current_file || prev.current_file,
+      processed: data.processed ?? prev.processed,
+      total: data.total ?? prev.total,
+      percentage: data.percentage ?? prev.percentage,
+      total_indexed: data.total_indexed ?? prev.total_indexed,
+      message: data.message || prev.message,
+      error: data.error || prev.error,
+      timestamp: data.timestamp || prev.timestamp
+    }));
+
+    // Auto-dismiss success messages after 10 seconds
+    if (data.type === 'indexing_completed') {
+      setTimeout(() => {
+        setIndexingStatus(prev => ({ ...prev, visible: false }));
+      }, 10000);
+    }
+  }, []);
+
+  // WebSocket connection
+  const { isConnected, connectionError } = useWebSocket(
+    'ws://localhost:8000/ws',
+    handleWebSocketMessage
+  );
+
+  // Dismiss status banner
+  const dismissIndexingStatus = useCallback(() => {
+    setIndexingStatus(prev => ({ ...prev, visible: false }));
+  }, []);
 
   // -------------------------------
   //  Single vs. double-click logic
@@ -106,16 +161,9 @@ const ImageSearch = () => {
         throw new Error('Failed to update image directory on backend');
       }
 
-      toast({
-        description: "Folders updated successfully! Indexing images...",
-        duration: 3000,
-      });
-
-      // Clear previous search results and wait for indexing to complete before reloading results
+      // No need for toast here since WebSocket will show real-time progress
+      // Clear previous search results
       setResults([]);
-      setTimeout(() => {
-        if (query.trim()) handleSearch();
-      }, 1000);
 
     } catch (err) {
       console.error('Error updating folders:', err);
@@ -267,6 +315,12 @@ const ImageSearch = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black to-gray-900 text-white">
+      {/* Indexing Status Banner */}
+      <IndexingStatusBanner 
+        status={indexingStatus} 
+        onDismiss={dismissIndexingStatus} 
+      />
+      
       {/* Background noise texture */}
       <div 
         className="fixed inset-0 pointer-events-none opacity-[0.015] z-0" 
@@ -365,7 +419,7 @@ const ImageSearch = () => {
         </div>
       )}
 
-      <div className="max-w-6xl mx-auto px-6 py-12 relative z-10">
+      <div className={`max-w-6xl mx-auto px-6 py-12 relative z-10 ${indexingStatus.visible ? 'pt-20' : ''}`}>
         <div className="mb-12 mt-8">
           <h1 className="text-4xl font-bold mb-2 text-center bg-gradient-to-r from-blue-400 via-cyan-200 to-indigo-200 bg-clip-text text-transparent drop-shadow-sm">
             Visual Search Explorer
@@ -373,6 +427,15 @@ const ImageSearch = () => {
           <p className="text-center text-gray-400 max-w-2xl mx-auto mb-10">
             Search your image library using natural language descriptions
           </p>
+
+          {/* Connection status indicator */}
+          {!isConnected && (
+            <div className="text-center mb-4">
+              <span className="text-xs text-yellow-400 bg-yellow-900/20 px-2 py-1 rounded">
+                ⚠️ Live updates disconnected - features may be limited
+              </span>
+            </div>
+          )}
 
           {/* Hidden input for folder selection */}
           <input
@@ -569,7 +632,7 @@ const ImageSearch = () => {
               <div className="absolute inset-0 bg-gradient-to-tr from-blue-500 to-purple-500 opacity-10 rounded-full blur-xl" />
             </div>
             <p className="text-lg">Enter a description to start searching...</p>
-            <p className="text-sm text-gray-500 mt-2">Example: "sunset over mountains" or "car in urban setting"</p>
+            <p className="text-sm text-gray-500 mt-2">Example: &quot;sunset over mountains&quot; or &quot;car in urban setting&quot;</p>
           </div>
         )}
 
