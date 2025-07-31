@@ -13,8 +13,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.routing import Mount
 
-from routes import folders, search, open_file, websocket
-from services.embeddings import extract_and_store_embeddings, embeddings_db, index_folder_async
+from routes import folders, search, open_file, websocket, database
+from services.embeddings import extract_and_store_embeddings, embedding_store, index_folder_async
 from services.watcher import start_watcher
 from state import watched_folders, current_image_dir
 
@@ -26,7 +26,6 @@ BASE_IMAGE_DIR = os.path.expanduser("~")          # user's home dir fallback
 
 
 def get_image_directory() -> str:
-    """Return the most-recently watched folder, or the home directory."""
     return list(watched_folders)[-1] if watched_folders else BASE_IMAGE_DIR
 
 
@@ -66,6 +65,7 @@ app.include_router(search.router,   tags=["Search"])
 app.include_router(open_file.router, tags=["File Operations"])
 app.include_router(folders.router,  tags=["Folder Management"])
 app.include_router(websocket.router, tags=["WebSocket"])
+app.include_router(database.router, tags=["Database"])
 
 # ─── Startup / Shutdown ──────────────────────────────────────────────────
 observer = None  # file-system watcher handle
@@ -74,13 +74,20 @@ observer = None  # file-system watcher handle
 @app.on_event("startup")
 async def startup_event():
     global observer
-    print("Extracting embeddings for default folder...")
-    extract_and_store_embeddings()
+    
+    # Only index default folder if no embeddings exist yet
+    stats = embedding_store.get_stats()
+    if stats["total_embeddings"] == 0:
+        print("No embeddings found. Extracting embeddings for default folder...")
+        extract_and_store_embeddings()
+    else:
+        print(f"Found {stats['total_embeddings']} existing embeddings. Skipping default folder indexing.")
 
-    watched_folders.append(BASE_IMAGE_DIR)
+    if BASE_IMAGE_DIR not in watched_folders:
+        watched_folders.append(BASE_IMAGE_DIR)
 
     print("Starting watcher for default folder...")
-    observer = start_watcher(BASE_IMAGE_DIR, embeddings_db)
+    observer = start_watcher(BASE_IMAGE_DIR, embedding_store)
 
     remount_static_files()
     print("Startup complete.")
@@ -97,17 +104,7 @@ def shutdown_event():
 # ─── Manual re-mount endpoint ────────────────────────────────────────────
 @app.post("/update-images/")
 async def update_images():
-    """
-    Remount static files and trigger async indexing of the current folder.
-    This will send real-time progress updates via WebSocket.
-    """
     remount_static_files()
-    
-    # Get the current folder to index
     current_folder = get_image_directory()
-    
-    # Start async indexing in background (don't await to return immediately)
-    asyncio.create_task(index_folder_async(current_folder))
-    
-    return {"status": "success", "image_directory": current_folder, "indexing": "started"}
+    return {"status": "success", "image_directory": current_folder, "message": "Static files remounted. Use /folders endpoint for indexing."}
 

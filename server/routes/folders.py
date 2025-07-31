@@ -1,4 +1,3 @@
-# server/routes/folders.py
 import os
 import asyncio
 from fastapi import APIRouter, HTTPException, Request, BackgroundTasks
@@ -8,14 +7,24 @@ from typing import List
 from services.embeddings import index_folder_async
 from services.watcher import add_watcher
 from state import watched_folders, get_indexing_status
-from services.embeddings import embeddings_db
+from services.embeddings import embedding_store
 
-# Dynamically determine the base directory
+# Check common locations where the folder might be
 BASE_DIRECTORIES = [
-    os.path.expanduser("~"),            # User home directory
-    os.path.abspath(os.getcwd())        # Current working directory
+    os.path.expanduser("~"),                   
+    os.path.abspath(os.getcwd()),            
+    os.path.dirname(os.path.abspath(__file__)), 
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    os.path.join(os.path.expanduser("~"), "Downloads"),
+    os.path.join(os.path.expanduser("~"), "Documents"),
+    os.path.join(os.path.expanduser("~"), "Pictures"),
+    os.path.join(os.path.expanduser("~"), "Desktop"),
+    os.path.join(os.path.expanduser("~"), "OneDrive"),
+    "C:\\Users\\Public\\Pictures",
+    "C:\\Users\\Public\\Documents",
+    "/usr/share/pixmaps",
+    "/home",
 ]
-
 
 class FoldersRequest(BaseModel):
     folders: List[str]
@@ -41,12 +50,16 @@ async def set_folders(request: Request, body: FoldersRequest, background_tasks: 
     for folder in body.folders:
         full_path = None
 
-        # Try resolving the folder using different base directories
-        for base in BASE_DIRECTORIES:
-            possible_path = os.path.join(base, folder)
-            if os.path.isdir(possible_path):
-                full_path = possible_path
-                break
+        # Check if it's already an absolute path
+        if os.path.isabs(folder) and os.path.isdir(folder):
+            full_path = folder
+        else:
+            # Try resolving the folder using different base directories
+            for base in BASE_DIRECTORIES:
+                possible_path = os.path.join(base, folder)
+                if os.path.isdir(possible_path):
+                    full_path = possible_path
+                    break
 
         if full_path is None:
             raise HTTPException(
@@ -61,7 +74,7 @@ async def set_folders(request: Request, body: FoldersRequest, background_tasks: 
             background_tasks.add_task(index_folder_async, full_path)
 
             if full_path not in watched_folders:
-                add_watcher(full_path, embeddings_db)
+                add_watcher(full_path, embedding_store)
                 watched_folders.append(full_path)
                 print(f"Watcher started on: {full_path}")
 
@@ -83,13 +96,12 @@ async def set_folders(request: Request, body: FoldersRequest, background_tasks: 
 
 @router.get("/indexing-status", tags=["Folder Management"], summary="Get current indexing status")
 async def get_indexing_status_endpoint():
-    """Get the current indexing status including progress information."""
     return get_indexing_status()
 
 
-@router.post("/reindex/", tags=["Folder Management"], summary="Reindex all watched folders")
+@router.post("/reindex/", tags=["Folder Management"], summary="Clear database and reindex all watched folders")
 async def reindex_all_folders(request: Request, background_tasks: BackgroundTasks):
-    global watched_folders, embeddings_db
+    global watched_folders
     
     # Check if already indexing
     status = get_indexing_status()
@@ -99,10 +111,13 @@ async def reindex_all_folders(request: Request, background_tasks: BackgroundTask
             detail=f"Already indexing folder: {status['current_folder']}. Please wait for completion."
         )
     
-    embeddings_db.clear()
-
-    # Re-index all watched folders (recursive)
+    print("REINDEX: Clearing all embeddings and rebuilding database from scratch")
+    embedding_store.clear_embeddings()
     for folder in watched_folders:
         background_tasks.add_task(index_folder_async, folder)
 
-    return {"status": "success", "message": "Re-indexing started for all watched folders. Check status for progress."}
+    return {
+        "status": "success", 
+        "message": "Database cleared. Re-indexing started for all watched folders. All embeddings will be rebuilt from scratch.",
+        "warning": "All existing embeddings have been deleted"
+    }
