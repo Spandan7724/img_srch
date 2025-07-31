@@ -2,6 +2,7 @@
 import os
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
+import numpy as np
 import torch
 from PIL import Image
 from services.embeddings import model, preprocess, embeddings_db, device
@@ -23,6 +24,7 @@ class ImageFolderHandler(FileSystemEventHandler):
                         image = preprocess(Image.open(
                             event.src_path)).unsqueeze(0).to(device)
                         embedding = model.encode_image(image).cpu().numpy()
+                        embedding /= np.linalg.norm(embedding, keepdims=True)
                     embeddings_db[event.src_path] = embedding
                     print(f"[WATCHER] Successfully embedded: {event.src_path}")
                 except Exception as e:

@@ -1,0 +1,345 @@
+{
+  "dataset_info": {
+    "path": "C:\\Users\\spandan\\Downloads\\testing_data",
+    "total_images": 1000,
+    "status": "valid"
+  },
+  "indexing_performance": {
+    "dataset_path": "C:\\Users\\spandan\\Downloads\\testing_data",
+    "total_images": 1000,
+    "total_time_seconds": 21.0783911000035,
+    "images_per_second": 47.44195110792085,
+    "milliseconds_per_image": 21.0783911000035,
+    "embeddings_created": 1000,
+    "status": "success"
+  },
+  "search_performance": {
+    "dataset_size": 1000,
+    "total_queries": 25,
+    "successful_queries": 25,
+    "success_rate": 100.0,
+    "avg_response_time_ms": 11.018424000940286,
+    "min_response_time_ms": 9.302100006607361,
+    "max_response_time_ms": 43.71939999691676,
+    "median_response_time_ms": 9.615700007998385,
+    "95th_percentile_ms": 33.637990000715945,
+    "avg_results_per_query": 5,
+    "avg_confidence": 0.6300771479606628,
+    "detailed_results": [
+      {
+        "query": "person walking",
+        "response_time_ms": 43.71939999691676,
+        "results_count": 5,
+        "avg_confidence": 0.6367252826690674,
+        "status": "success"
+      },
+      {
+        "query": "car driving",
+        "response_time_ms": 9.812699994654395,
+        "results_count": 5,
+        "avg_confidence": 0.6309919118881225,
+        "status": "success"
+      },
+      {
+        "query": "dog playing",
+        "response_time_ms": 10.006299999076873,
+        "results_count": 5,
+        "avg_confidence": 0.6361035108566284,
+        "status": "success"
+      },
+      {
+        "query": "cat sitting",
+        "response_time_ms": 9.479800006374717,
+        "results_count": 5,
+        "avg_confidence": 0.6294428706169128,
+        "status": "success"
+      },
+      {
+        "query": "house exterior",
+        "response_time_ms": 9.443400005693547,
+        "results_count": 5,
+        "avg_confidence": 0.6374807834625245,
+        "status": "success"
+      },
+      {
+        "query": "tree in park",
+        "response_time_ms": 9.615700007998385,
+        "results_count": 5,
+        "avg_confidence": 0.6138278007507324,
+        "status": "success"
+      },
+      {
+        "query": "food on table",
+        "response_time_ms": 10.045099988928996,
+        "results_count": 5,
+        "avg_confidence": 0.6392931938171387,
+        "status": "success"
+      },
+      {
+        "query": "water scenery",
+        "response_time_ms": 9.858299992629327,
+        "results_count": 5,
+        "avg_confidence": 0.6323729395866394,
+        "status": "success"
+      },
+      {
+        "query": "mountain landscape",
+        "response_time_ms": 9.51270000950899,
+        "results_count": 5,
+        "avg_confidence": 0.6062319040298462,
+        "status": "success"
+      },
+      {
+        "query": "city street",
+        "response_time_ms": 9.460599991143681,
+        "results_count": 5,
+        "avg_confidence": 0.6425117492675781,
+        "status": "success"
+      },
+      {
+        "query": "sunset view",
+        "response_time_ms": 9.926600003382191,
+        "results_count": 5,
+        "avg_confidence": 0.6247469067573548,
+        "status": "success"
+      },
+      {
+        "query": "beach scene",
+        "response_time_ms": 9.916499999235384,
+        "results_count": 5,
+        "avg_confidence": 0.6357615709304809,
+        "status": "success"
+      },
+      {
+        "query": "forest path",
+        "response_time_ms": 9.927799997967668,
+        "results_count": 5,
+        "avg_confidence": 0.5967070698738098,
+        "status": "success"
+      },
+      {
+        "query": "building architecture",
+        "response_time_ms": 9.502200002316386,
+        "results_count": 5,
+        "avg_confidence": 0.641109025478363,
+        "status": "success"
+      },
+      {
+        "query": "animal portrait",
+        "response_time_ms": 9.690899998531677,
+        "results_count": 5,
+        "avg_confidence": 0.6351762771606445,
+        "status": "success"
+      },
+      {
+        "query": "flower garden",
+        "response_time_ms": 9.399699993082322,
+        "results_count": 5,
+        "avg_confidence": 0.6086279153823853,
+        "status": "success"
+      },
+      {
+        "query": "bridge crossing",
+        "response_time_ms": 9.302100006607361,
+        "results_count": 5,
+        "avg_confidence": 0.6267202496528625,
+        "status": "success"
+      },
+      {
+        "query": "train station",
+        "response_time_ms": 9.426200005691499,
+        "results_count": 5,
+        "avg_confidence": 0.6607434153556824,
+        "status": "success"
+      },
+      {
+        "query": "boat harbor",
+        "response_time_ms": 9.402700001373887,
+        "results_count": 5,
+        "avg_confidence": 0.6264247298240662,
+        "status": "success"
+      },
+      {
+        "query": "airplane sky",
+        "response_time_ms": 9.537400008412078,
+        "results_count": 5,
+        "avg_confidence": 0.6201852321624756,
+        "status": "success"
+      },
+      {
+        "query": "person walking",
+        "response_time_ms": 9.425199998077005,
+        "results_count": 5,
+        "avg_confidence": 0.6367252826690674,
+        "status": "success"
+      },
+      {
+        "query": "car driving",
+        "response_time_ms": 9.695999993709847,
+        "results_count": 5,
+        "avg_confidence": 0.6309919118881225,
+        "status": "success"
+      },
+      {
+        "query": "dog playing",
+        "response_time_ms": 10.114700009580702,
+        "results_count": 5,
+        "avg_confidence": 0.6361035108566284,
+        "status": "success"
+      },
+      {
+        "query": "cat sitting",
+        "response_time_ms": 9.81050000700634,
+        "results_count": 5,
+        "avg_confidence": 0.6294428706169128,
+        "status": "success"
+      },
+      {
+        "query": "house exterior",
+        "response_time_ms": 9.42810000560712,
+        "results_count": 5,
+        "avg_confidence": 0.6374807834625245,
+        "status": "success"
+      }
+    ]
+  },
+  "memory_performance": {
+    "test_name": "1K Dataset Memory Test",
+    "folder_path": "C:\\Users\\spandan\\Downloads\\testing_data",
+    "total_images": 1000,
+    "embeddings_created": 1000,
+    "indexing_time_seconds": 21.644439499999862,
+    "memory_stats": {
+      "samples_count": 215,
+      "duration_seconds": 22.0789692401886,
+      "rss_stats": {
+        "initial_mb": 1040.15234375,
+        "final_mb": 1044.32421875,
+        "peak_mb": 1048.02734375,
+        "min_mb": 1040.15234375,
+        "avg_mb": 1043.4237827034883,
+        "increase_mb": 4.171875
+      },
+      "vms_stats": {
+        "initial_mb": 3019.98828125,
+        "final_mb": 3023.9296875,
+        "peak_mb": 3027.6328125,
+        "min_mb": 3019.98828125,
+        "avg_mb": 3023.431722383721,
+        "increase_mb": 3.94140625
+      }
+    },
+    "status": "success",
+    "memory_per_image_mb": 0.004171875,
+    "peak_memory_mb": 1048.02734375,
+    "memory_efficiency": {
+      "mb_per_image": 0.004171875,
+      "images_per_gb": 245453.18352059924,
+      "peak_mb": 1048.02734375
+    }
+  },
+  "concurrent_performance": {
+    "stats": {
+      "concurrent_users": 15,
+      "requests_per_user": 2,
+      "total_requests": 30,
+      "total_time_seconds": 0.38004870001168456,
+      "requests_per_second": 78.93725198659449,
+      "successful_requests": 30,
+      "failed_requests": 0,
+      "timeout_requests": 0,
+      "success_rate": 100.0,
+      "avg_response_time_ms": 237.04402666529253,
+      "min_response_time_ms": 102.18709999753628,
+      "max_response_time_ms": 378.84740000299644,
+      "median_response_time_ms": 238.93029999453574,
+      "95th_percentile_ms": 373.930455003574,
+      "std_deviation_ms": 90.06156349518272
+    },
+    "successful_results": [
+      {
+        "request_id": 0,
+        "query": "cat sitting",
+        "response_time_ms": 266.5456999966409,
+        "status": "success",
+        "results_count": 5,
+        "status_code": 200
+      },
+      {
+        "request_id": 1,
+        "query": "dog running",
+        "response_time_ms": 257.97289999900386,
+        "status": "success",
+        "results_count": 5,
+        "status_code": 200
+      },
+      {
+        "request_id": 2,
+        "query": "car driving",
+        "response_time_ms": 193.88489999982994,
+        "status": "success",
+        "results_count": 5,
+        "status_code": 200
+      },
+      {
+        "request_id": 3,
+        "query": "person walking",
+        "response_time_ms": 290.75400000147056,
+        "status": "success",
+        "results_count": 5,
+        "status_code": 200
+      },
+      {
+        "request_id": 4,
+        "query": "tree in forest",
+        "response_time_ms": 183.9254000078654,
+        "status": "success",
+        "results_count": 5,
+        "status_code": 200
+      },
+      {
+        "request_id": 5,
+        "query": "house with garden",
+        "response_time_ms": 203.0355999886524,
+        "status": "success",
+        "results_count": 5,
+        "status_code": 200
+      },
+      {
+        "request_id": 6,
+        "query": "food on plate",
+        "response_time_ms": 306.1085999943316,
+        "status": "success",
+        "results_count": 5,
+        "status_code": 200
+      },
+      {
+        "request_id": 7,
+        "query": "water flowing",
+        "response_time_ms": 343.37740000046324,
+        "status": "success",
+        "results_count": 5,
+        "status_code": 200
+      },
+      {
+        "request_id": 8,
+        "query": "mountain peak",
+        "response_time_ms": 361.7470000026515,
+        "status": "success",
+        "results_count": 5,
+        "status_code": 200
+      },
+      {
+        "request_id": 9,
+        "query": "blue sky",
+        "response_time_ms": 378.84740000299644,
+        "status": "success",
+        "results_count": 5,
+        "status_code": 200
+      }
+    ],
+    "failed_results": [],
+    "timeout_results": []
+  },
+  "timestamp": 1749638663.4593158
+}
